@@ -38,6 +38,7 @@ out/
 .DS_Store
 Thumbs.db
 
-# Keystore files (never commit signing keys)
+# Add these now, before you need them
+keystore.properties
 *.jks
 *.keystore
