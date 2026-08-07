@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NeuroFix</string>
+
+    <!-- Onboarding: Welcome -->
+    <string name="onboarding_welcome_title">Welcome to your Vault</string>
+    <string name="onboarding_welcome_body">NeuroFix isn\'t here to block anything. It\'s a place to intentionally store apps you want less impulsive access to — so opening them becomes a choice, not a reflex.</string>
+    <string name="onboarding_get_started">Get Started</string>
+
+    <!-- Onboarding: Permissions -->
+    <string name="onboarding_permissions_title">Two permissions to set up</string>
+    <string name="onboarding_permissions_subtitle">NeuroFix works entirely on your device — nothing you grant here ever leaves your phone.</string>
+    <string name="permission_usage_access_title">Usage Access</string>
+    <string name="permission_usage_access_description">Lets NeuroFix recognize which app is currently open, so it knows when a Vaulted App has been reached.</string>
+    <string name="permission_accessibility_title">Accessibility Service</string>
+    <string name="permission_accessibility_description">Lets NeuroFix show the Vault Screen the moment a Vaulted App opens.</string>
+    <string name="permission_grant_button">Grant</string>
+    <string name="permission_status_granted">Granted</string>
+    <string name="permission_status_not_granted">Not granted yet</string>
+    <string name="onboarding_continue">Continue</string>
+
+    <!-- Onboarding: App Selection -->
+    <string name="onboarding_app_selection_title">Choose your Vaulted Apps</string>
+    <string name="onboarding_app_selection_subtitle">Pick the apps you want to access more intentionally. You can change this anytime.</string>
+    <string name="onboarding_finish_setup">Finish Setup</string>
+
+    <!-- Dashboard placeholder -->
+    <string name="dashboard_placeholder_label">Onboarding complete — Dashboard goes here next</string>
+
+    <string name="accessibility_service_description">
+    NeuroFix monitors the foreground application to enforce your configured focus rules. No personal data leaves your device.
+    </string>
+</resources>
