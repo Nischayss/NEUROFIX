@@ -1,6 +1,8 @@
 package com.neurofix.app.data.repository;
 
-import com.neurofix.app.data.local.OnboardingPreferencesDataStore;
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import com.neurofix.app.database.dao.VaultedAppDao;
 import com.neurofix.app.database.entity.VaultedAppEntity;
 import com.neurofix.app.domain.model.InstalledApp;
@@ -10,26 +12,29 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
 /**
- * Coordinates Room (Vaulted Apps table) and DataStore Preferences (a single
- * onboarding-complete boolean, via OnboardingPreferencesDataStore).
+ * Coordinates Room (Vaulted Apps table) and a small SharedPreferences file
+ * (a single onboarding-complete boolean).
  *
- * Interface contract (VaultedAppRepository) is unchanged from the
- * SharedPreferences-based version — vaultApps/isOnboardingComplete/
- * setOnboardingComplete keep identical signatures and behavior, so
- * CompleteOnboardingUseCase and every caller above this layer needed no
- * changes.
+ * Using plain SharedPreferences here rather than DataStore is a deliberate
+ * simplicity choice: DataStore's API is Flow/coroutines-based, which adds
+ * real complexity in a Java-only project for what is a single synchronous
+ * boolean read/write.
  */
 public class VaultedAppRepositoryImpl implements VaultedAppRepository {
 
+    private static final String PREFS_NAME = "neurofix_onboarding_prefs";
+    private static final String KEY_ONBOARDING_COMPLETE = "onboarding_complete";
+
     private final VaultedAppDao vaultedAppDao;
-    private final OnboardingPreferencesDataStore onboardingPreferencesDataStore;
+    private final SharedPreferences preferences;
 
     @Inject
-    public VaultedAppRepositoryImpl(VaultedAppDao vaultedAppDao,
-                                     OnboardingPreferencesDataStore onboardingPreferencesDataStore) {
+    public VaultedAppRepositoryImpl(VaultedAppDao vaultedAppDao, @ApplicationContext Context context) {
         this.vaultedAppDao = vaultedAppDao;
-        this.onboardingPreferencesDataStore = onboardingPreferencesDataStore;
+        this.preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
     @Override
@@ -47,11 +52,16 @@ public class VaultedAppRepositoryImpl implements VaultedAppRepository {
 
     @Override
     public boolean isOnboardingComplete() {
-        return onboardingPreferencesDataStore.isOnboardingComplete();
+        return preferences.getBoolean(KEY_ONBOARDING_COMPLETE, false);
     }
 
     @Override
     public void setOnboardingComplete() {
-        onboardingPreferencesDataStore.setOnboardingComplete();
+        preferences.edit().putBoolean(KEY_ONBOARDING_COMPLETE, true).apply();
+    }
+
+    @Override
+    public int getActiveVaultedAppCount() {
+        return vaultedAppDao.getActiveVaultedAppCount();
     }
 }

@@ -32,4 +32,7 @@ public interface VaultedAppDao {
 
     @Query("SELECT COUNT(*) FROM vaulted_apps WHERE is_active = 1")
     LiveData<Integer> observeActiveVaultedAppCount();
+
+    @Query("SELECT COUNT(*) FROM vaulted_apps WHERE is_active = 1")
+    int getActiveVaultedAppCount();
 }

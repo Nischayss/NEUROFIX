@@ -24,10 +24,24 @@
     <string name="onboarding_app_selection_subtitle">Pick the apps you want to access more intentionally. You can change this anytime.</string>
     <string name="onboarding_finish_setup">Finish Setup</string>
 
-    <!-- Dashboard placeholder -->
-    <string name="dashboard_placeholder_label">Onboarding complete — Dashboard goes here next</string>
+    <!-- Dashboard -->
+    <string name="dashboard_welcome_back">Welcome Back</string>
+    <string name="dashboard_focus_status_label">Focus Status</string>
+    <string name="dashboard_vaulted_apps_label">Vaulted Apps</string>
+    <string name="dashboard_todays_focus_label">Today\'s Focus</string>
+    <string name="dashboard_current_streak_label">Current Streak</string>
+    <string name="dashboard_longest_streak_label">Longest Streak</string>
+    <string name="dashboard_emergency_budget_label">Emergency Budget</string>
+    <string name="dashboard_quick_actions_label">Quick Actions</string>
+    <string name="action_manage_vault">Manage Vault</string>
+    <string name="action_statistics">Statistics</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Placeholder screens -->
+    <string name="placeholder_default_title">Coming Soon</string>
+    <string name="placeholder_coming_soon">This screen isn\'t built yet.</string>
 
     <string name="accessibility_service_description">
-    NeuroFix monitors the foreground application to enforce your configured focus rules. No personal data leaves your device.
+    Allows NeuroFix to detect when a selected app is opened so it can display the focus screen.
     </string>
 </resources>

@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_primary">#6750A4</color>
-    <color name="brand_secondary">#625B71</color>
+    <!-- Deep indigo/slate as the brand anchor — calm, trustworthy, not alarmist
+         (deliberately avoiding red/orange "warning" tones typical of blocker apps) -->
+    <color name="brand_primary">#4F5FE8</color>
+    <color name="brand_primary_dark">#2E3AA8</color>
+    <color name="brand_secondary">#00BFA6</color>
 
     <color name="surface_light">#FAFAFC</color>
-    <color name="surface_dark">#121218</color>
+    <color name="surface_dark">#000000</color>
     <color name="surface_variant_light">#F0F0F5</color>
     <color name="surface_variant_dark">#1E1E26</color>
 
@@ -14,5 +17,4 @@
     <color name="text_secondary_dark">#A6A6B3</color>
 
     <color name="error">#E53935</color>
-
 </resources>

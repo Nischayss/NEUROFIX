@@ -16,4 +16,6 @@ public interface VaultedAppRepository {
     boolean isOnboardingComplete();
 
     void setOnboardingComplete();
+
+    int getActiveVaultedAppCount();
 }
