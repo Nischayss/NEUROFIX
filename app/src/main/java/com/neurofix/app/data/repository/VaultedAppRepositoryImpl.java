@@ -3,11 +3,16 @@ package com.neurofix.app.data.repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Transformations;
+
 import com.neurofix.app.database.dao.VaultedAppDao;
 import com.neurofix.app.database.entity.VaultedAppEntity;
 import com.neurofix.app.domain.model.InstalledApp;
+import com.neurofix.app.domain.model.VaultedApp;
 import com.neurofix.app.domain.repository.VaultedAppRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -63,5 +68,33 @@ public class VaultedAppRepositoryImpl implements VaultedAppRepository {
     @Override
     public int getActiveVaultedAppCount() {
         return vaultedAppDao.getActiveVaultedAppCount();
+    }
+
+    @Override
+    public LiveData<List<VaultedApp>> observeAllVaultedApps() {
+        return Transformations.map(vaultedAppDao.observeAllVaultedApps(), this::mapToDomainList);
+    }
+
+    @Override
+    public List<String> getVaultedPackageNames() {
+        return vaultedAppDao.getAllVaultedPackageNames();
+    }
+
+    @Override
+    public void setAppActive(String packageName, boolean isActive) {
+        vaultedAppDao.updateActiveState(packageName, isActive);
+    }
+
+    @Override
+    public void removeApp(String packageName) {
+        vaultedAppDao.deleteByPackageName(packageName);
+    }
+
+    private List<VaultedApp> mapToDomainList(List<VaultedAppEntity> entities) {
+        List<VaultedApp> result = new ArrayList<>();
+        for (VaultedAppEntity entity : entities) {
+            result.add(new VaultedApp(entity.getPackageName(), entity.getDisplayName(), entity.isActive()));
+        }
+        return result;
     }
 }

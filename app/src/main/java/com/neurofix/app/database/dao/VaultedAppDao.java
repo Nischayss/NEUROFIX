@@ -35,4 +35,16 @@ public interface VaultedAppDao {
 
     @Query("SELECT COUNT(*) FROM vaulted_apps WHERE is_active = 1")
     int getActiveVaultedAppCount();
+
+    @Query("SELECT * FROM vaulted_apps ORDER BY display_name ASC")
+    LiveData<List<VaultedAppEntity>> observeAllVaultedApps();
+
+    @Query("SELECT package_name FROM vaulted_apps")
+    List<String> getAllVaultedPackageNames();
+
+    @Query("UPDATE vaulted_apps SET is_active = :isActive WHERE package_name = :packageName")
+    void updateActiveState(String packageName, boolean isActive);
+
+    @Query("DELETE FROM vaulted_apps WHERE package_name = :packageName")
+    void deleteByPackageName(String packageName);
 }

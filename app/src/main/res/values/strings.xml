@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name">NeuroFix</string>
 
+    <!-- Accessibility Service (Step 5 - required by res/xml/accessibility_service_config.xml) -->
+    <string name="accessibility_service_description">Allows NeuroFix to detect when a selected app is opened so it can display the focus screen.</string>
+
     <!-- Onboarding: Welcome -->
     <string name="onboarding_welcome_title">Welcome to your Vault</string>
     <string name="onboarding_welcome_body">NeuroFix isn\'t here to block anything. It\'s a place to intentionally store apps you want less impulsive access to — so opening them becomes a choice, not a reflex.</string>
@@ -41,7 +44,17 @@
     <string name="placeholder_default_title">Coming Soon</string>
     <string name="placeholder_coming_soon">This screen isn\'t built yet.</string>
 
-    <string name="accessibility_service_description">
-    Allows NeuroFix to detect when a selected app is opened so it can display the focus screen.
-    </string>
+    <!-- Manage Vault -->
+    <string name="manage_vault_title">Manage Vault</string>
+    <string name="manage_vault_subtitle">These apps require intentional access.</string>
+    <string name="manage_vault_empty_state">Your Vault is empty. Add an app to get started.</string>
+    <string name="manage_vault_add_apps_button">+ Add Apps</string>
+    <string name="vaulted_app_status_active">Active</string>
+    <string name="vaulted_app_status_inactive">Inactive</string>
+    <string name="vaulted_app_remove_button">Remove</string>
+
+    <!-- Add Apps -->
+    <string name="add_apps_title">Add Apps to Vault</string>
+    <string name="add_apps_subtitle">Choose more apps to access more intentionally.</string>
+    <string name="add_apps_confirm_button">Add Selected</string>
 </resources>
