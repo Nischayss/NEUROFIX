@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.neurofix.app.core.AppExecutors;
 import com.neurofix.app.domain.usecase.GetVaultedAppCountUseCase;
 
 import java.text.SimpleDateFormat;
@@ -16,20 +15,19 @@ import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
 /**
- * Dashboard is informational only in this step — no Vault Engine, no usage
- * tracking. Vaulted App Count is the one real value, loaded from Room via
- * GetVaultedAppCountUseCase. Every other field is a static placeholder,
- * still exposed as LiveData so the View only ever observes and never
- * hardcodes or computes display values — the same rule applies whether a
- * value is real or a placeholder today.
+ * Dashboard is informational only in this step — no usage tracking beyond
+ * the Vault Engine's own enforcement. Vaulted App Count is now a LIVE value
+ * (fixed from a one-shot load — see GetVaultedAppCountUseCase for the bug
+ * this corrects), sourced directly from Room via the repository's LiveData.
+ * AppExecutors is no longer needed here since there's no manual background
+ * load to perform — Room's LiveData already delivers on the main thread.
+ * Every other field remains a static placeholder, still exposed as LiveData
+ * so the View only ever observes and never hardcodes display values.
  */
 @HiltViewModel
 public class DashboardViewModel extends ViewModel {
 
-    private final GetVaultedAppCountUseCase getVaultedAppCountUseCase;
-    private final AppExecutors appExecutors;
-
-    private final MutableLiveData<Integer> vaultedAppCount = new MutableLiveData<>(0);
+    private final LiveData<Integer> vaultedAppCount;
     private final MutableLiveData<String> currentDate = new MutableLiveData<>();
     private final MutableLiveData<String> focusStatus = new MutableLiveData<>("Ready");
     private final MutableLiveData<String> todaysFocus = new MutableLiveData<>("--");
@@ -38,12 +36,9 @@ public class DashboardViewModel extends ViewModel {
     private final MutableLiveData<String> emergencyBudget = new MutableLiveData<>("Not Configured");
 
     @Inject
-    public DashboardViewModel(GetVaultedAppCountUseCase getVaultedAppCountUseCase,
-                               AppExecutors appExecutors) {
-        this.getVaultedAppCountUseCase = getVaultedAppCountUseCase;
-        this.appExecutors = appExecutors;
+    public DashboardViewModel(GetVaultedAppCountUseCase getVaultedAppCountUseCase) {
+        this.vaultedAppCount = getVaultedAppCountUseCase.execute();
         currentDate.setValue(new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(new Date()));
-        loadVaultedAppCount();
     }
 
     public LiveData<Integer> getVaultedAppCount() {
@@ -72,12 +67,5 @@ public class DashboardViewModel extends ViewModel {
 
     public LiveData<String> getEmergencyBudget() {
         return emergencyBudget;
-    }
-
-    private void loadVaultedAppCount() {
-        appExecutors.diskIO().execute(() -> {
-            int count = getVaultedAppCountUseCase.execute();
-            appExecutors.mainThread().execute(() -> vaultedAppCount.setValue(count));
-        });
     }
 }

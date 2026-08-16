@@ -57,4 +57,23 @@
     <string name="add_apps_title">Add Apps to Vault</string>
     <string name="add_apps_subtitle">Choose more apps to access more intentionally.</string>
     <string name="add_apps_confirm_button">Add Selected</string>
+
+    <!-- Vault Block Screen -->
+    <string name="vault_block_title">Take a pause.</string>
+    <string name="vault_block_body">The app you\'re trying to open is currently in your Vault.</string>
+    <string name="vault_block_return_button">Return to NeuroFix</string>
+
+    <!-- Vault Enforcement Notification (Mode 2) -->
+    <string name="vault_notification_channel_name">Vault Enforcement</string>
+    <string name="vault_notification_title">NeuroFix blocked this app</string>
+    <string name="vault_notification_body">Take a pause. This app is currently in your Vault.</string>
+
+    <!-- Settings: Vault Enforcement -->
+    <string name="settings_enforcement_title">Vault enforcement</string>
+    <string name="settings_enforcement_subtitle">Choose what happens when you open a Vaulted App.</string>
+    <string name="settings_mode_return_home_title">Return Home</string>
+    <string name="settings_mode_return_home_description">Immediately leave vaulted apps.</string>
+    <string name="settings_mode_return_home_notification_title">Return Home + Notification</string>
+    <string name="settings_mode_return_home_notification_description">Leave the vaulted app and show an explanation notification.</string>
+    <string name="settings_notification_permission_hint">Notifications are off — you\'ll still be sent Home, but won\'t see an explanation. Enable notifications in system Settings to see it.</string>
 </resources>

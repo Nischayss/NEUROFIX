@@ -71,6 +71,11 @@ public class VaultedAppRepositoryImpl implements VaultedAppRepository {
     }
 
     @Override
+    public LiveData<Integer> observeActiveVaultedAppCount() {
+        return vaultedAppDao.observeActiveVaultedAppCount();
+    }
+
+    @Override
     public LiveData<List<VaultedApp>> observeAllVaultedApps() {
         return Transformations.map(vaultedAppDao.observeAllVaultedApps(), this::mapToDomainList);
     }

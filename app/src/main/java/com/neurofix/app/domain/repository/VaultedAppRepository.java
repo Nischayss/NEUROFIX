@@ -22,6 +22,8 @@ public interface VaultedAppRepository {
 
     int getActiveVaultedAppCount();
 
+    LiveData<Integer> observeActiveVaultedAppCount();
+
     LiveData<List<VaultedApp>> observeAllVaultedApps();
 
     List<String> getVaultedPackageNames();

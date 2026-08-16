@@ -1,14 +1,22 @@
 package com.neurofix.app.domain.usecase;
 
+import androidx.lifecycle.LiveData;
+
 import com.neurofix.app.domain.repository.VaultedAppRepository;
 
 import javax.inject.Inject;
 
 /**
- * Returns how many apps are currently active in the Vault. Kept as its own
- * Use Case rather than calling the repository directly from the ViewModel,
- * since "vault count" is a value Statistics and Vault Engine will also need
- * later — one canonical definition instead of each caller re-deriving it.
+ * Returns the LIVE count of active Vaulted Apps for the Dashboard.
+ *
+ * Originally a one-shot int load — that was the root cause of a real bug:
+ * Dashboard's count froze at whatever value it had when first loaded and
+ * never updated after apps were removed/disabled in Manage Vault, because
+ * DashboardFragment's ViewModel instance is reused (not recreated) when
+ * navigating back from Manage Vault. Now backed by the DAO's live query
+ * (which already existed, just wasn't wired through), so Dashboard reflects
+ * changes exactly as promptly as Manage Vault's own list does — both are
+ * driven by the same Room table invalidation.
  */
 public class GetVaultedAppCountUseCase {
 
@@ -19,7 +27,7 @@ public class GetVaultedAppCountUseCase {
         this.repository = repository;
     }
 
-    public int execute() {
-        return repository.getActiveVaultedAppCount();
+    public LiveData<Integer> execute() {
+        return repository.observeActiveVaultedAppCount();
     }
 }

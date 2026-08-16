@@ -13,6 +13,14 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!--
+        Required only to show the optional Step 8 "explanation" notification
+        (Mode 2). Enforcement itself (GLOBAL_ACTION_HOME) never depends on
+        this — declined/absent permission only means the explanation isn't
+        shown, never that a vaulted app fails to be blocked.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".NeuroFixApplication"
         android:allowBackup="false"
@@ -30,6 +38,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            The Vault Screen shown over a blocked app. exported=false: only
+            NeuroFix itself ever launches it. launchMode=singleTask prevents
+            a stack of duplicate blocking screens from rapid repeated
+            accessibility events for the same package. excludeFromRecents:
+            it's a transient enforcement screen, not a real destination the
+            user should find lingering in their recent-apps list.
+        -->
+        <activity
+            android:name=".presentation.vault.VaultBlockActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.NeuroFix" />
 
         <!--
             android:permission=BIND_ACCESSIBILITY_SERVICE is required by the
