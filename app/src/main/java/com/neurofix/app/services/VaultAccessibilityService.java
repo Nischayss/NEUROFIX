@@ -101,6 +101,15 @@ public class VaultAccessibilityService extends AccessibilityService {
         defaultHomePackageName = resolveDefaultHomePackageName();
         notificationHelper = new VaultNotificationHelper(this);
 
+        // Defensive: if onServiceConnected() ever fires more than once
+        // within the same process lifetime (a transient unbind/rebind not
+        // involving full process death), remove any previous subscription
+        // first — otherwise a second one would be created without the
+        // first ever being cleaned up, leaking an observer.
+        if (vaultedAppsLiveData != null) {
+            vaultedAppsLiveData.removeObserver(vaultedAppsObserver);
+        }
+
         // Registered here (not onCreate) because onServiceConnected() is
         // called every time the system (re)binds this service — including
         // after the hosting process is killed and restarted, or after

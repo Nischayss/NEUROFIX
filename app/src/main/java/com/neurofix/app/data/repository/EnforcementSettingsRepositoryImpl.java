@@ -7,6 +7,7 @@ import com.neurofix.app.domain.model.EnforcementMode;
 import com.neurofix.app.domain.repository.EnforcementSettingsRepository;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import dagger.hilt.android.qualifiers.ApplicationContext;
 
@@ -16,6 +17,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
  * preferences file keeps this concern cleanly apart from vault/onboarding
  * data without adding any new storage technology to the project.
  */
+@Singleton
 public class EnforcementSettingsRepositoryImpl implements EnforcementSettingsRepository {
 
     private static final String PREFS_NAME = "neurofix_settings_prefs";

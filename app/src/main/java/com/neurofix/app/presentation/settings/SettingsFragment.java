@@ -27,6 +27,16 @@ import dagger.hilt.android.AndroidEntryPoint;
  * make Mode 2's explanation notification visible; declining it never
  * prevents the mode from being selected or enforcement from working —
  * VaultAccessibilityService always performs GLOBAL_ACTION_HOME regardless.
+ *
+ * FIX: previously the initial radio-button state was driven by observing
+ * SettingsViewModel's LiveData, which called RadioGroup.check() — and
+ * .check() synchronously fires the SAME OnCheckedChangeListener that also
+ * calls back into that same LiveData mid-dispatch. That reentrant pattern
+ * is fragile and has shown version-dependent AndroidX behavior. Now the
+ * initial state is set ONCE, directly from the already-resolved ViewModel
+ * value, BEFORE the click listener is attached at all — no reentrancy,
+ * no LiveData observer needed for this screen (nothing external changes
+ * this setting while Settings is open, so "live" updates aren't needed).
  */
 @AndroidEntryPoint
 public class SettingsFragment extends Fragment {
@@ -51,6 +61,17 @@ public class SettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
 
+        // Set the initial checked state directly, once, from the already-
+        // resolved value — SettingsViewModel's constructor reads it
+        // synchronously, so getValue() is guaranteed non-null here.
+        EnforcementMode currentMode = viewModel.getEnforcementMode().getValue();
+        int idToCheck = currentMode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION
+                ? binding.radioReturnHomeWithNotification.getId()
+                : binding.radioReturnHome.getId();
+        binding.radioGroupEnforcementMode.check(idToCheck);
+
+        // Listener attached AFTER the initial check() above, so that one
+        // programmatic call never triggers this listener at all.
         binding.radioGroupEnforcementMode.setOnCheckedChangeListener((group, checkedId) -> {
             EnforcementMode mode = checkedId == binding.radioReturnHomeWithNotification.getId()
                     ? EnforcementMode.RETURN_HOME_WITH_NOTIFICATION
@@ -62,15 +83,7 @@ public class SettingsFragment extends Fragment {
             updateNotificationHint();
         });
 
-        viewModel.getEnforcementMode().observe(getViewLifecycleOwner(), mode -> {
-            int idToCheck = mode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION
-                    ? binding.radioReturnHomeWithNotification.getId()
-                    : binding.radioReturnHome.getId();
-            if (binding.radioGroupEnforcementMode.getCheckedRadioButtonId() != idToCheck) {
-                binding.radioGroupEnforcementMode.check(idToCheck);
-            }
-            updateNotificationHint();
-        });
+        updateNotificationHint();
     }
 
     private void requestNotificationPermissionIfNeeded() {
