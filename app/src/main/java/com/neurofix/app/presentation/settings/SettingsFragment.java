@@ -16,27 +16,22 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.neurofix.app.R;
 import com.neurofix.app.databinding.FragmentSettingsBinding;
 import com.neurofix.app.domain.model.EnforcementMode;
+import com.neurofix.app.permissions.PermissionHelper;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 /**
- * The only Settings screen built so far — deliberately scoped to the one
- * Step 8 toggle. Requesting POST_NOTIFICATIONS here (API 33+) is purely to
- * make Mode 2's explanation notification visible; declining it never
- * prevents the mode from being selected or enforcement from working —
- * VaultAccessibilityService always performs GLOBAL_ACTION_HOME regardless.
- *
- * FIX: previously the initial radio-button state was driven by observing
- * SettingsViewModel's LiveData, which called RadioGroup.check() — and
- * .check() synchronously fires the SAME OnCheckedChangeListener that also
- * calls back into that same LiveData mid-dispatch. That reentrant pattern
- * is fragile and has shown version-dependent AndroidX behavior. Now the
- * initial state is set ONCE, directly from the already-resolved ViewModel
- * value, BEFORE the click listener is attached at all — no reentrancy,
- * no LiveData observer needed for this screen (nothing external changes
- * this setting while Settings is open, so "live" updates aren't needed).
+ * FIX (real root cause of "both options selected"): the two RadioButtons
+ * are nested inside MaterialCardViews (for the card visual style), which
+ * means they are NOT direct children of a RadioGroup — and RadioGroup's
+ * automatic mutual-exclusion ONLY works between its direct children. The
+ * RadioGroup wrapper was therefore never actually enforcing anything;
+ * tapping one button never unchecked the other. This is now handled
+ * explicitly in code instead, which works correctly regardless of how
+ * deeply each button is nested in the layout.
  */
 @AndroidEntryPoint
 public class SettingsFragment extends Fragment {
@@ -61,29 +56,58 @@ public class SettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
 
-        // Set the initial checked state directly, once, from the already-
-        // resolved value — SettingsViewModel's constructor reads it
-        // synchronously, so getValue() is guaranteed non-null here.
-        EnforcementMode currentMode = viewModel.getEnforcementMode().getValue();
-        int idToCheck = currentMode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION
-                ? binding.radioReturnHomeWithNotification.getId()
-                : binding.radioReturnHome.getId();
-        binding.radioGroupEnforcementMode.check(idToCheck);
+        binding.radioReturnHome.setOnClickListener(v -> selectMode(EnforcementMode.RETURN_HOME));
+        binding.radioReturnHomeWithNotification.setOnClickListener(v ->
+                selectMode(EnforcementMode.RETURN_HOME_WITH_NOTIFICATION));
 
-        // Listener attached AFTER the initial check() above, so that one
-        // programmatic call never triggers this listener at all.
-        binding.radioGroupEnforcementMode.setOnCheckedChangeListener((group, checkedId) -> {
-            EnforcementMode mode = checkedId == binding.radioReturnHomeWithNotification.getId()
-                    ? EnforcementMode.RETURN_HOME_WITH_NOTIFICATION
-                    : EnforcementMode.RETURN_HOME;
-            viewModel.setEnforcementMode(mode);
-            if (mode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION) {
-                requestNotificationPermissionIfNeeded();
-            }
-            updateNotificationHint();
-        });
-
+        applyModeToUi(viewModel.getEnforcementMode().getValue());
         updateNotificationHint();
+
+        binding.buttonEnableAccessibility.setOnClickListener(v ->
+                startActivity(PermissionHelper.buildAccessibilitySettingsIntent()));
+        binding.buttonEnableUsageAccess.setOnClickListener(v ->
+                startActivity(PermissionHelper.buildUsageAccessSettingsIntent()));
+
+        viewModel.getAccessibilityEnabled().observe(getViewLifecycleOwner(), this::updateAccessibilityStatus);
+        viewModel.getUsageAccessGranted().observe(getViewLifecycleOwner(), this::updateUsageAccessStatus);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        applyModeToUi(viewModel.refreshEnforcementMode());
+        updateNotificationHint();
+        viewModel.refreshPermissionStatus();
+    }
+
+    /** User tapped one of the two options — explicitly makes it exclusive. */
+    private void selectMode(EnforcementMode mode) {
+        applyModeToUi(mode);
+        viewModel.setEnforcementMode(mode);
+        if (mode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION) {
+            requestNotificationPermissionIfNeeded();
+        }
+        updateNotificationHint();
+    }
+
+    /** Sets both buttons' checked state directly — never relies on RadioGroup. */
+    private void applyModeToUi(EnforcementMode mode) {
+        binding.radioReturnHome.setChecked(mode == EnforcementMode.RETURN_HOME);
+        binding.radioReturnHomeWithNotification.setChecked(mode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION);
+    }
+
+    private void updateAccessibilityStatus(boolean enabled) {
+        binding.textAccessibilityStatus.setText(enabled
+                ? getString(R.string.permission_status_granted)
+                : getString(R.string.permission_status_not_granted));
+        binding.buttonEnableAccessibility.setVisibility(enabled ? View.GONE : View.VISIBLE);
+    }
+
+    private void updateUsageAccessStatus(boolean granted) {
+        binding.textUsageAccessStatus.setText(granted
+                ? getString(R.string.permission_status_granted)
+                : getString(R.string.permission_status_not_granted));
+        binding.buttonEnableUsageAccess.setVisibility(granted ? View.GONE : View.VISIBLE);
     }
 
     private void requestNotificationPermissionIfNeeded() {
@@ -98,8 +122,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updateNotificationHint() {
-        boolean notificationModeSelected = binding.radioGroupEnforcementMode.getCheckedRadioButtonId()
-                == binding.radioReturnHomeWithNotification.getId();
+        boolean notificationModeSelected = binding.radioReturnHomeWithNotification.isChecked();
 
         boolean notificationPermissionDenied = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 && ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
@@ -107,14 +130,6 @@ public class SettingsFragment extends Fragment {
 
         binding.textNotificationPermissionHint.setVisibility(
                 notificationModeSelected && notificationPermissionDenied ? View.VISIBLE : View.GONE);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Permission may have been changed in system Settings since this
-        // screen was last visible.
-        updateNotificationHint();
     }
 
     @Override
