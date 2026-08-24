@@ -76,4 +76,6 @@
     <string name="settings_mode_return_home_notification_title">Return Home + Notification</string>
     <string name="settings_mode_return_home_notification_description">Leave the vaulted app and show an explanation notification.</string>
     <string name="settings_notification_permission_hint">Notifications are off — you\'ll still be sent Home, but won\'t see an explanation. Enable notifications in system Settings to see it.</string>
+    <string name="settings_permissions_title">Permissions</string>
+    <string name="settings_autostart_note">On some devices (including Xiaomi/MIUI), Vault enforcement may stop working after NeuroFix is removed from Recent Apps unless Autostart is enabled for NeuroFix in your device\'s battery or app-management settings. This varies by manufacturer — check your device settings if enforcement seems to stop unexpectedly.</string>
 </resources>
