@@ -63,13 +63,19 @@ public class SettingsFragment extends Fragment {
         applyModeToUi(viewModel.getEnforcementMode().getValue());
         updateNotificationHint();
 
+// minimal replacement code
         binding.buttonEnableAccessibility.setOnClickListener(v ->
                 startActivity(PermissionHelper.buildAccessibilitySettingsIntent()));
         binding.buttonEnableUsageAccess.setOnClickListener(v ->
                 startActivity(PermissionHelper.buildUsageAccessSettingsIntent()));
+        binding.buttonFixReliability.setOnClickListener(v -> startActivity(
+                PermissionHelper.isKnownAggressiveOem()
+                        ? PermissionHelper.buildAutostartSettingsIntent(requireContext())
+                        : PermissionHelper.buildIgnoreBatteryOptimizationsIntent(requireContext())));
 
         viewModel.getAccessibilityEnabled().observe(getViewLifecycleOwner(), this::updateAccessibilityStatus);
         viewModel.getUsageAccessGranted().observe(getViewLifecycleOwner(), this::updateUsageAccessStatus);
+        viewModel.getBatteryOptimizationIgnored().observe(getViewLifecycleOwner(), this::updateReliabilityStatus);
     }
 
     @Override
@@ -108,6 +114,13 @@ public class SettingsFragment extends Fragment {
                 ? getString(R.string.permission_status_granted)
                 : getString(R.string.permission_status_not_granted));
         binding.buttonEnableUsageAccess.setVisibility(granted ? View.GONE : View.VISIBLE);
+    }
+
+// minimal replacement code
+    private void updateReliabilityStatus(boolean batteryOptimizationIgnored) {
+        binding.textReliabilityStatus.setText(batteryOptimizationIgnored
+                ? getString(R.string.settings_reliability_status_ok)
+                : getString(R.string.settings_reliability_status_restricted));
     }
 
     private void requestNotificationPermissionIfNeeded() {

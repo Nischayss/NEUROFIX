@@ -34,6 +34,7 @@ public class SettingsViewModel extends ViewModel {
     private final MutableLiveData<EnforcementMode> enforcementMode = new MutableLiveData<>();
     private final MutableLiveData<Boolean> accessibilityEnabled = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> usageAccessGranted = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> batteryOptimizationIgnored = new MutableLiveData<>(false);
 
     @Inject
     public SettingsViewModel(GetEnforcementModeUseCase getEnforcementModeUseCase,
@@ -56,8 +57,13 @@ public class SettingsViewModel extends ViewModel {
         return accessibilityEnabled;
     }
 
+// minimal replacement code
     public LiveData<Boolean> getUsageAccessGranted() {
         return usageAccessGranted;
+    }
+
+    public LiveData<Boolean> getBatteryOptimizationIgnored() {
+        return batteryOptimizationIgnored;
     }
 
     public void setEnforcementMode(EnforcementMode mode) {
@@ -83,8 +89,10 @@ public class SettingsViewModel extends ViewModel {
      * outside NeuroFix (system Settings). This never assumes a state —
      * it re-checks the real OS state every time it's called.
      */
+// minimal replacement code
     public void refreshPermissionStatus() {
         accessibilityEnabled.setValue(PermissionHelper.isAccessibilityServiceEnabled(appContext));
         usageAccessGranted.setValue(PermissionHelper.isUsageAccessGranted(appContext));
+        batteryOptimizationIgnored.setValue(PermissionHelper.isIgnoringBatteryOptimizations(appContext));
     }
 }
