@@ -63,7 +63,6 @@ public class SettingsFragment extends Fragment {
         applyModeToUi(viewModel.getEnforcementMode().getValue());
         updateNotificationHint();
 
-// minimal replacement code
         binding.buttonEnableAccessibility.setOnClickListener(v ->
                 startActivity(PermissionHelper.buildAccessibilitySettingsIntent()));
         binding.buttonEnableUsageAccess.setOnClickListener(v ->
@@ -116,7 +115,6 @@ public class SettingsFragment extends Fragment {
         binding.buttonEnableUsageAccess.setVisibility(granted ? View.GONE : View.VISIBLE);
     }
 
-// minimal replacement code
     private void updateReliabilityStatus(boolean batteryOptimizationIgnored) {
         binding.textReliabilityStatus.setText(batteryOptimizationIgnored
                 ? getString(R.string.settings_reliability_status_ok)
