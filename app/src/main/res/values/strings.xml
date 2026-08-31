@@ -65,6 +65,9 @@
 
     <!-- Vault Enforcement Notification (Mode 2) -->
     <string name="vault_notification_channel_name">Vault Enforcement</string>
+    <string name="vault_foreground_channel_name">Vault Protection Active</string>
+    <string name="vault_foreground_notification_title">NeuroFix protection active</string>
+    <string name="vault_foreground_notification_body">Vaulted apps are being enforced.</string>
     <string name="vault_notification_title">NeuroFix blocked this app</string>
     <string name="vault_notification_body">Take a pause. This app is currently in your Vault.</string>
 
@@ -76,7 +79,6 @@
     <string name="settings_mode_return_home_notification_title">Return Home + Notification</string>
     <string name="settings_mode_return_home_notification_description">Leave the vaulted app and show an explanation notification.</string>
     <string name="settings_notification_permission_hint">Notifications are off — you\'ll still be sent Home, but won\'t see an explanation. Enable notifications in system Settings to see it.</string>
-// minimal replacement code
     <string name="settings_permissions_title">Permissions</string>
 
     <!-- Settings: Reliability (Step 8 continuation) -->

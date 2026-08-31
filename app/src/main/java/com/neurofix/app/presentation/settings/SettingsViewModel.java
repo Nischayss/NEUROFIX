@@ -57,7 +57,6 @@ public class SettingsViewModel extends ViewModel {
         return accessibilityEnabled;
     }
 
-// minimal replacement code
     public LiveData<Boolean> getUsageAccessGranted() {
         return usageAccessGranted;
     }
@@ -89,7 +88,6 @@ public class SettingsViewModel extends ViewModel {
      * outside NeuroFix (system Settings). This never assumes a state —
      * it re-checks the real OS state every time it's called.
      */
-// minimal replacement code
     public void refreshPermissionStatus() {
         accessibilityEnabled.setValue(PermissionHelper.isAccessibilityServiceEnabled(appContext));
         usageAccessGranted.setValue(PermissionHelper.isUsageAccessGranted(appContext));

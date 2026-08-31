@@ -19,11 +19,21 @@
         this — declined/absent permission only means the explanation isn't
         shown, never that a vaulted app fails to be blocked.
     -->
-    // minimal replacement code
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
 
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!--
+        Standard public API for keeping a service alive with visible user
+        awareness — the opposite of a stealth mechanism: the notification is
+        mandatory and always visible while active. FOREGROUND_SERVICE is
+        normal/auto-granted; FOREGROUND_SERVICE_SPECIAL_USE is required on
+        API 34+ because "vault enforcement" doesn't map to any of the
+        predefined foreground service types (location, camera, media, etc).
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name=".NeuroFixApplication"
@@ -67,6 +77,7 @@
         <service
             android:name=".services.VaultAccessibilityService"
             android:exported="true"
+            android:foregroundServiceType="specialUse"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
@@ -74,6 +85,9 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="vault_enforcement_keep_alive" />
         </service>
 
     </application>

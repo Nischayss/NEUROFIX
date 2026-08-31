@@ -4,9 +4,11 @@ import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
+import androidx.core.app.ServiceCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
@@ -51,6 +53,18 @@ import dagger.hilt.android.AndroidEntryPoint;
  * (the one Settings toggle) for where that lives. Cache/debounce/
  * self-exclusion logic below is unchanged from the previously-verified
  * detection pipeline.
+ *
+ * FOREGROUND SERVICE (Step 8 continuation): startForeground() is called in
+ * onServiceConnected() with a mandatory, always-visible, non-dismissible
+ * notification — this is the standard, documented Android API for a
+ * long-lived background service, the same one music/navigation/fitness
+ * apps use. It is not SYSTEM_ALERT_WINDOW, not a watchdog, and grants no
+ * elevated privilege: it only changes this process's OOM priority and
+ * makes it eligible for MIUI's "Lock this app" Recents protection, which
+ * MIUI does not offer to plain bound services. It does not, and cannot,
+ * prevent the OS from killing the process outright if the user explicitly
+ * force-stops the app from system Settings — that remains a genuine,
+ * un-closeable limit given the no-root/no-Shizuku/no-hack constraint.
  */
 @AndroidEntryPoint
 public class VaultAccessibilityService extends AccessibilityService {
@@ -100,6 +114,17 @@ public class VaultAccessibilityService extends AccessibilityService {
 
         defaultHomePackageName = resolveDefaultHomePackageName();
         notificationHelper = new VaultNotificationHelper(this);
+
+        // Promote to foreground service — see class doc for why. Uses
+        // ServiceCompat so the FOREGROUND_SERVICE_TYPE_SPECIAL_USE argument
+        // is only actually required/passed on API levels that need it,
+        // without an SDK-version branch here.
+        ServiceCompat.startForeground(
+                this,
+                VaultNotificationHelper.FOREGROUND_NOTIFICATION_ID,
+                notificationHelper.buildForegroundNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        );
 
         // Defensive: if onServiceConnected() ever fires more than once
         // within the same process lifetime (a transient unbind/rebind not
@@ -226,6 +251,11 @@ public class VaultAccessibilityService extends AccessibilityService {
         if (vaultedAppsLiveData != null) {
             vaultedAppsLiveData.removeObserver(vaultedAppsObserver);
         }
+        // Best-effort cleanup on a clean shutdown. Not reachable on the
+        // MIUI kill path this whole feature targets — that's a hard
+        // process kill, not a graceful onDestroy() — so this is here for
+        // correctness on normal service teardown, not as the reliability fix.
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
         super.onDestroy();
     }
 }

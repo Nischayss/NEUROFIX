@@ -26,6 +26,13 @@ public class VaultNotificationHelper {
     private static final String CHANNEL_ID = "neurofix_vault_enforcement";
     private static final int NOTIFICATION_ID = 1001;
 
+    // Separate channel: IMPORTANCE_LOW (silent, no heads-up, no sound) —
+    // this is an ongoing "still protecting you" indicator, not an alert.
+    // A different channel from the block-explanation one so the user can
+    // mute/configure them independently in system Settings.
+    private static final String FOREGROUND_CHANNEL_ID = "neurofix_vault_foreground";
+    public static final int FOREGROUND_NOTIFICATION_ID = 1002;
+
     private final Context context;
 
     public VaultNotificationHelper(Context context) {
@@ -73,6 +80,26 @@ public class VaultNotificationHelper {
         }
     }
 
+    /**
+     * The persistent, ongoing notification required to run as a foreground
+     * service. Deliberately minimal and non-alarming (no icon badge beyond
+     * the standard shield, no sound, IMPORTANCE_LOW channel, not
+     * dismissible while the service is foregrounded) — it exists only to
+     * satisfy Android's foreground-service transparency requirement and to
+     * make NeuroFix eligible for MIUI's "Lock this app" Recents protection,
+     * which stock bound (non-foreground) services aren't offered.
+     */
+    public android.app.Notification buildForegroundNotification() {
+        return new NotificationCompat.Builder(context, FOREGROUND_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_lock_lock)
+                .setContentTitle(context.getString(R.string.vault_foreground_notification_title))
+                .setContentText(context.getString(R.string.vault_foreground_notification_body))
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .setSilent(true)
+                .build();
+    }
+
     private void createChannelIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return;
@@ -87,5 +114,12 @@ public class VaultNotificationHelper {
                 NotificationManager.IMPORTANCE_DEFAULT
         );
         manager.createNotificationChannel(channel);
+
+        NotificationChannel foregroundChannel = new NotificationChannel(
+                FOREGROUND_CHANNEL_ID,
+                context.getString(R.string.vault_foreground_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+        );
+        manager.createNotificationChannel(foregroundChannel);
     }
 }
