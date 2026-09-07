@@ -1,9 +1,11 @@
 package com.neurofix.app.di;
 
 import com.neurofix.app.data.repository.EnforcementSettingsRepositoryImpl;
+import com.neurofix.app.data.repository.FocusModeRepositoryImpl;
 import com.neurofix.app.data.repository.InstalledAppRepositoryImpl;
 import com.neurofix.app.data.repository.VaultedAppRepositoryImpl;
 import com.neurofix.app.domain.repository.EnforcementSettingsRepository;
+import com.neurofix.app.domain.repository.FocusModeRepository;
 import com.neurofix.app.domain.repository.InstalledAppRepository;
 import com.neurofix.app.domain.repository.VaultedAppRepository;
 
@@ -24,4 +26,7 @@ public abstract class RepositoryModule {
 
     @Binds
     public abstract EnforcementSettingsRepository bindEnforcementSettingsRepository(EnforcementSettingsRepositoryImpl impl);
+
+    @Binds
+    public abstract FocusModeRepository bindFocusModeRepository(FocusModeRepositoryImpl impl);
 }

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,16 +35,15 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class VaultBlockActivity extends AppCompatActivity {
 
-    // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-    private static final String DIAG_TAG = "NEUROFIX_VAULT_DIAG";
-
     private ActivityVaultBlockBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: VAULT_BLOCK_ON_CREATE");
+
+        // Tapjacking protection: rejects any touch that arrives while this
+        // window is (even partially) obscured by another app's overlay.
+        binding.getRoot().setFilterTouchesWhenObscured(true);
 
         binding = ActivityVaultBlockBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -63,15 +61,11 @@ public class VaultBlockActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: VAULT_BLOCK_ON_RESUME");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: VAULT_BLOCK_ON_PAUSE");
     }
 
     private void registerBackPressedCallback() {
@@ -112,8 +106,6 @@ public class VaultBlockActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: VAULT_BLOCK_ON_DESTROY");
         binding = null;
         super.onDestroy();
     }

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import androidx.core.app.ServiceCompat;
@@ -15,6 +14,7 @@ import androidx.lifecycle.Observer;
 import com.neurofix.app.domain.model.EnforcementMode;
 import com.neurofix.app.domain.model.VaultedApp;
 import com.neurofix.app.domain.usecase.GetEnforcementModeUseCase;
+import com.neurofix.app.domain.usecase.ObserveActiveModePackageNamesUseCase;
 import com.neurofix.app.domain.usecase.ObserveVaultedAppsUseCase;
 
 import java.util.HashSet;
@@ -65,15 +65,29 @@ import dagger.hilt.android.AndroidEntryPoint;
  * prevent the OS from killing the process outright if the user explicitly
  * force-stops the app from system Settings — that remains a genuine,
  * un-closeable limit given the no-root/no-Shizuku/no-hack constraint.
+ *
+ * DIAGNOSTIC LOGGING REMOVED: the NEUROFIX_VAULT_DIAG Log.d() calls used to
+ * verify Step 8's detection-to-enforcement pipeline (visible in the earlier
+ * logcat captures) have been removed now that the pipeline is verified
+ * working. Nothing in enforcement itself ever depended on them.
+ *
+ * FOCUS MODES (Step 9) — UNION, not replace: while a Focus Mode is active,
+ * its apps are enforced IN ADDITION TO the base Vault, never instead of it.
+ * This was an explicit user decision, made for a security reason: Union
+ * means activating a mode can only ever ADD restrictions, never silently
+ * remove one the base Vault was supposed to always catch. Two independent
+ * LiveData caches (activeVaultedPackageNames, activeFocusModePackageNames)
+ * are checked with OR in onAccessibilityEvent — see enforceVault() call
+ * site below.
  */
 @AndroidEntryPoint
 public class VaultAccessibilityService extends AccessibilityService {
 
-    // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-    private static final String DIAG_TAG = "NEUROFIX_VAULT_DIAG";
-
     @Inject
     ObserveVaultedAppsUseCase observeVaultedAppsUseCase;
+
+    @Inject
+    ObserveActiveModePackageNamesUseCase observeActiveModePackageNamesUseCase;
 
     @Inject
     GetEnforcementModeUseCase getEnforcementModeUseCase;
@@ -83,7 +97,11 @@ public class VaultAccessibilityService extends AccessibilityService {
     private LiveData<List<VaultedApp>> vaultedAppsLiveData;
     private final Observer<List<VaultedApp>> vaultedAppsObserver = this::onVaultedAppsChanged;
 
+    private LiveData<List<String>> activeModePackageNamesLiveData;
+    private final Observer<List<String>> activeModePackageNamesObserver = this::onActiveModePackageNamesChanged;
+
     private volatile Set<String> activeVaultedPackageNames = new HashSet<>();
+    private volatile Set<String> activeFocusModePackageNames = new HashSet<>();
 
     private String lastForegroundPackageName = null;
     private String defaultHomePackageName = null;
@@ -109,8 +127,6 @@ public class VaultAccessibilityService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: SERVICE_CONNECTED");
 
         defaultHomePackageName = resolveDefaultHomePackageName();
         notificationHelper = new VaultNotificationHelper(this);
@@ -134,6 +150,9 @@ public class VaultAccessibilityService extends AccessibilityService {
         if (vaultedAppsLiveData != null) {
             vaultedAppsLiveData.removeObserver(vaultedAppsObserver);
         }
+        if (activeModePackageNamesLiveData != null) {
+            activeModePackageNamesLiveData.removeObserver(activeModePackageNamesObserver);
+        }
 
         // Registered here (not onCreate) because onServiceConnected() is
         // called every time the system (re)binds this service — including
@@ -141,6 +160,9 @@ public class VaultAccessibilityService extends AccessibilityService {
         // device reboot — so the cache is guaranteed fresh, never stale.
         vaultedAppsLiveData = observeVaultedAppsUseCase.execute();
         vaultedAppsLiveData.observeForever(vaultedAppsObserver);
+
+        activeModePackageNamesLiveData = observeActiveModePackageNamesUseCase.execute();
+        activeModePackageNamesLiveData.observeForever(activeModePackageNamesObserver);
     }
 
     private void onVaultedAppsChanged(List<VaultedApp> vaultedApps) {
@@ -153,8 +175,12 @@ public class VaultAccessibilityService extends AccessibilityService {
             }
         }
         activeVaultedPackageNames = active;
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: CACHE_SIZE=" + active.size());
+    }
+
+    private void onActiveModePackageNamesChanged(List<String> packageNames) {
+        activeFocusModePackageNames = packageNames != null
+                ? new HashSet<>(packageNames)
+                : new HashSet<>();
     }
 
     @Override
@@ -168,8 +194,6 @@ public class VaultAccessibilityService extends AccessibilityService {
             return;
         }
         String packageName = packageNameSequence.toString();
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: EVENT_PACKAGE=" + packageName);
 
         // Debounce: only act when the foreground package actually changes —
         // a single app can fire multiple TYPE_WINDOW_STATE_CHANGED events
@@ -195,11 +219,12 @@ public class VaultAccessibilityService extends AccessibilityService {
             return; // never block the device's home/launcher, even if it were somehow vaulted
         }
 
-        boolean isMatch = activeVaultedPackageNames.contains(packageName);
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: MATCH=" + isMatch);
-
-        if (isMatch) {
+        // UNION rule (Step 9): an app is blocked if it's in the base Vault
+        // OR in the currently active Focus Mode's list — either is
+        // sufficient, matching the explicit "additive only" security
+        // decision documented in the class doc above.
+        if (activeVaultedPackageNames.contains(packageName)
+                || activeFocusModePackageNames.contains(packageName)) {
             enforceVault();
         }
     }
@@ -209,20 +234,12 @@ public class VaultAccessibilityService extends AccessibilityService {
 
         // The enforcement action. This alone is the entire security
         // boundary — everything below it is optional explanation UX.
-        boolean sentHome = performGlobalAction(GLOBAL_ACTION_HOME);
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: GLOBAL_ACTION_HOME=" + sentHome);
+        performGlobalAction(GLOBAL_ACTION_HOME);
 
         EnforcementMode mode = getEnforcementModeUseCase.execute();
-        // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-        Log.d(DIAG_TAG, "TEMP DIAGNOSTIC: ENFORCEMENT_MODE=" + mode);
 
         if (mode == EnforcementMode.RETURN_HOME_WITH_NOTIFICATION) {
-            boolean posted = notificationHelper.showBlockedNotification(lastForegroundPackageName);
-            // TEMP DIAGNOSTIC — REMOVE AFTER STEP 8 VERIFICATION
-            Log.d(DIAG_TAG, posted
-                    ? "TEMP DIAGNOSTIC: NOTIFICATION_POSTED"
-                    : "TEMP DIAGNOSTIC: NOTIFICATION_PERMISSION_DENIED");
+            notificationHelper.showBlockedNotification(lastForegroundPackageName);
         }
     }
 
@@ -250,6 +267,9 @@ public class VaultAccessibilityService extends AccessibilityService {
     public void onDestroy() {
         if (vaultedAppsLiveData != null) {
             vaultedAppsLiveData.removeObserver(vaultedAppsObserver);
+        }
+        if (activeModePackageNamesLiveData != null) {
+            activeModePackageNamesLiveData.removeObserver(activeModePackageNamesObserver);
         }
         // Best-effort cleanup on a clean shutdown. Not reachable on the
         // MIUI kill path this whole feature targets — that's a hard
