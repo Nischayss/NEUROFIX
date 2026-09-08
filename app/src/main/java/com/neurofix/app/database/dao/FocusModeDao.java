@@ -42,6 +42,9 @@ public interface FocusModeDao {
     @Query("SELECT * FROM focus_mode_apps WHERE focus_mode_id = :modeId ORDER BY display_name ASC")
     LiveData<List<FocusModeAppCrossRefEntity>> observeAppsForMode(long modeId);
 
+    @Query("SELECT package_name FROM focus_mode_apps WHERE focus_mode_id = :modeId")
+    List<String> getPackageNamesForMode(long modeId);
+
     @Insert
     void insertAppToMode(FocusModeAppCrossRefEntity crossRef);
 

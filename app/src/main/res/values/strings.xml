@@ -68,6 +68,18 @@
     <string name="vault_foreground_channel_name">Vault Protection Active</string>
     <string name="vault_foreground_notification_title">NeuroFix protection active</string>
     <string name="vault_foreground_notification_body">Vaulted apps are being enforced.</string>
+
+    <!-- Focus Modes (Step 9) -->
+    <string name="action_focus_modes">Focus Modes</string>
+    <string name="focus_modes_title">Focus Modes</string>
+    <string name="focus_modes_subtitle">Turn on a mode to enforce its own set of apps, on top of your Vault.</string>
+    <string name="focus_modes_empty_state">No Focus Modes yet.</string>
+    <string name="focus_modes_create_custom_button">Create Custom Mode</string>
+    <string name="focus_modes_create_dialog_title">Name your mode</string>
+    <string name="focus_modes_create_dialog_hint">e.g. Reading</string>
+    <string name="focus_mode_detail_subtitle">Apps in this mode are blocked whenever it\'s active.</string>
+    <string name="focus_mode_detail_empty_state">No apps in this mode yet.</string>
+    <string name="focus_mode_detail_add_apps_button">Add Apps</string>
     <string name="vault_notification_title">NeuroFix blocked this app</string>
     <string name="vault_notification_body">Take a pause. This app is currently in your Vault.</string>
 

@@ -25,6 +25,9 @@ public interface FocusModeRepository {
 
     LiveData<List<FocusModeApp>> observeAppsForMode(long modeId);
 
+    /** One-shot package name list for the "add apps" candidate filter — mirrors VaultedAppRepository.getVaultedPackageNames(). */
+    List<String> getPackageNamesForMode(long modeId);
+
     int getFocusModeCount();
 
     /**

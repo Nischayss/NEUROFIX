@@ -40,6 +40,11 @@ public class FocusModeRepositoryImpl implements FocusModeRepository {
     }
 
     @Override
+    public List<String> getPackageNamesForMode(long modeId) {
+        return focusModeDao.getPackageNamesForMode(modeId);
+    }
+
+    @Override
     public int getFocusModeCount() {
         return focusModeDao.countFocusModes();
     }

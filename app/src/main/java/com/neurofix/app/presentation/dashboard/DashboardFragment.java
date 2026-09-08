@@ -51,6 +51,8 @@ public class DashboardFragment extends Fragment {
 
         binding.buttonManageVault.setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_dashboard_to_manage_vault));
+        binding.buttonFocusModes.setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_dashboard_to_focus_modes));
         binding.buttonStatistics.setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_dashboard_to_statistics));
         binding.buttonSettings.setOnClickListener(v ->

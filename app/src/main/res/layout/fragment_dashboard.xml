@@ -259,6 +259,15 @@
             app:cornerRadius="16dp" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_focus_modes"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="@string/action_focus_modes"
+            app:cornerRadius="16dp" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_statistics"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"

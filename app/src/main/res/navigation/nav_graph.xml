@@ -46,6 +46,9 @@
             android:id="@+id/action_dashboard_to_manage_vault"
             app:destination="@id/manageVaultPlaceholderFragment" />
         <action
+            android:id="@+id/action_dashboard_to_focus_modes"
+            app:destination="@id/focusModesFragment" />
+        <action
             android:id="@+id/action_dashboard_to_statistics"
             app:destination="@id/statisticsPlaceholderFragment" />
         <action
@@ -66,6 +69,32 @@
     <fragment
         android:id="@+id/addAppsFragment"
         android:name="com.neurofix.app.presentation.vault.AddAppsFragment"
+        android:label="Add Apps"
+        tools:layout="@layout/fragment_add_apps" />
+
+    <fragment
+        android:id="@+id/focusModesFragment"
+        android:name="com.neurofix.app.presentation.focusmode.FocusModesFragment"
+        android:label="@string/focus_modes_title"
+        tools:layout="@layout/fragment_focus_modes">
+        <action
+            android:id="@+id/action_focus_modes_to_detail"
+            app:destination="@id/focusModeDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/focusModeDetailFragment"
+        android:name="com.neurofix.app.presentation.focusmode.FocusModeDetailFragment"
+        android:label="Focus Mode"
+        tools:layout="@layout/fragment_focus_mode_detail">
+        <action
+            android:id="@+id/action_focus_mode_detail_to_add_apps"
+            app:destination="@id/addAppsToFocusModeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addAppsToFocusModeFragment"
+        android:name="com.neurofix.app.presentation.focusmode.AddAppsToFocusModeFragment"
         android:label="Add Apps"
         tools:layout="@layout/fragment_add_apps" />
 
