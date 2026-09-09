@@ -22,6 +22,8 @@ public class EnforcementSettingsRepositoryImpl implements EnforcementSettingsRep
 
     private static final String PREFS_NAME = "neurofix_settings_prefs";
     private static final String KEY_ENFORCEMENT_MODE = "enforcement_mode";
+    private static final String KEY_RELIABILITY_NOTIFICATION_ENABLED = "reliability_notification_enabled";
+    private static final String KEY_FOCUS_MODE_UNION_ENABLED = "focus_mode_union_enabled";
 
     private final SharedPreferences preferences;
 
@@ -43,5 +45,25 @@ public class EnforcementSettingsRepositoryImpl implements EnforcementSettingsRep
     @Override
     public void setEnforcementMode(EnforcementMode mode) {
         preferences.edit().putString(KEY_ENFORCEMENT_MODE, mode.name()).apply();
+    }
+
+    @Override
+    public boolean isReliabilityNotificationEnabled() {
+        return preferences.getBoolean(KEY_RELIABILITY_NOTIFICATION_ENABLED, true);
+    }
+
+    @Override
+    public void setReliabilityNotificationEnabled(boolean enabled) {
+        preferences.edit().putBoolean(KEY_RELIABILITY_NOTIFICATION_ENABLED, enabled).apply();
+    }
+
+    @Override
+    public boolean isFocusModeUnionEnabled() {
+        return preferences.getBoolean(KEY_FOCUS_MODE_UNION_ENABLED, true);
+    }
+
+    @Override
+    public void setFocusModeUnionEnabled(boolean enabled) {
+        preferences.edit().putBoolean(KEY_FOCUS_MODE_UNION_ENABLED, enabled).apply();
     }
 }

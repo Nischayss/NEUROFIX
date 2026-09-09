@@ -99,4 +99,10 @@
     <string name="settings_reliability_status_ok">Battery optimization: not restricted</string>
     <string name="settings_reliability_status_restricted">Battery optimization: restricted</string>
     <string name="settings_reliability_button">Fix Reliability</string>
+
+    <string name="settings_reliability_notification_title">Protection Notification</string>
+    <string name="settings_reliability_notification_description">Shows a persistent notification while any app is being protected. Turning this off may make enforcement less reliable after NeuroFix is cleared from Recents.</string>
+
+    <string name="settings_focus_mode_union_title">Focus Mode Behavior</string>
+    <string name="settings_focus_mode_union_description">On: an active Focus Mode adds to your Vault (both enforced). Off: an active Focus Mode replaces your Vault (only that mode\'s apps enforced).</string>
 </resources>

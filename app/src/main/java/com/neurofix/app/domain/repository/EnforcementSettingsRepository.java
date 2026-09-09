@@ -14,4 +14,12 @@ public interface EnforcementSettingsRepository {
     EnforcementMode getEnforcementMode();
 
     void setEnforcementMode(EnforcementMode mode);
+
+    boolean isReliabilityNotificationEnabled();
+
+    void setReliabilityNotificationEnabled(boolean enabled);
+
+    boolean isFocusModeUnionEnabled();
+
+    void setFocusModeUnionEnabled(boolean enabled);
 }

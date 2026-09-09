@@ -72,9 +72,24 @@ public class SettingsFragment extends Fragment {
                         ? PermissionHelper.buildAutostartSettingsIntent(requireContext())
                         : PermissionHelper.buildIgnoreBatteryOptimizationsIntent(requireContext())));
 
+        
         viewModel.getAccessibilityEnabled().observe(getViewLifecycleOwner(), this::updateAccessibilityStatus);
         viewModel.getUsageAccessGranted().observe(getViewLifecycleOwner(), this::updateUsageAccessStatus);
         viewModel.getBatteryOptimizationIgnored().observe(getViewLifecycleOwner(), this::updateReliabilityStatus);
+
+        viewModel.getReliabilityNotificationEnabled().observe(getViewLifecycleOwner(), enabled -> {
+            binding.switchReliabilityNotification.setOnCheckedChangeListener(null);
+            binding.switchReliabilityNotification.setChecked(Boolean.TRUE.equals(enabled));
+            binding.switchReliabilityNotification.setOnCheckedChangeListener((buttonView, checked) ->
+                    viewModel.setReliabilityNotificationEnabled(checked));
+        });
+
+        viewModel.getFocusModeUnionEnabled().observe(getViewLifecycleOwner(), enabled -> {
+            binding.switchFocusModeUnion.setOnCheckedChangeListener(null);
+            binding.switchFocusModeUnion.setChecked(Boolean.TRUE.equals(enabled));
+            binding.switchFocusModeUnion.setOnCheckedChangeListener((buttonView, checked) ->
+                    viewModel.setFocusModeUnionEnabled(checked));
+        });
     }
 
     @Override

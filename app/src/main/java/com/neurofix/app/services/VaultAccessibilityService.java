@@ -14,6 +14,8 @@ import androidx.lifecycle.Observer;
 import com.neurofix.app.domain.model.EnforcementMode;
 import com.neurofix.app.domain.model.VaultedApp;
 import com.neurofix.app.domain.usecase.GetEnforcementModeUseCase;
+import com.neurofix.app.domain.usecase.GetFocusModeUnionEnabledUseCase;
+import com.neurofix.app.domain.usecase.GetReliabilityNotificationEnabledUseCase;
 import com.neurofix.app.domain.usecase.ObserveActiveModePackageNamesUseCase;
 import com.neurofix.app.domain.usecase.ObserveVaultedAppsUseCase;
 
@@ -92,7 +94,14 @@ public class VaultAccessibilityService extends AccessibilityService {
     @Inject
     GetEnforcementModeUseCase getEnforcementModeUseCase;
 
+    @Inject
+    GetReliabilityNotificationEnabledUseCase getReliabilityNotificationEnabledUseCase;
+
+    @Inject
+    GetFocusModeUnionEnabledUseCase getFocusModeUnionEnabledUseCase;
+
     private VaultNotificationHelper notificationHelper;
+    private boolean isCurrentlyForeground = false;
 
     private LiveData<List<VaultedApp>> vaultedAppsLiveData;
     private final Observer<List<VaultedApp>> vaultedAppsObserver = this::onVaultedAppsChanged;
@@ -131,17 +140,6 @@ public class VaultAccessibilityService extends AccessibilityService {
         defaultHomePackageName = resolveDefaultHomePackageName();
         notificationHelper = new VaultNotificationHelper(this);
 
-        // Promote to foreground service — see class doc for why. Uses
-        // ServiceCompat so the FOREGROUND_SERVICE_TYPE_SPECIAL_USE argument
-        // is only actually required/passed on API levels that need it,
-        // without an SDK-version branch here.
-        ServiceCompat.startForeground(
-                this,
-                VaultNotificationHelper.FOREGROUND_NOTIFICATION_ID,
-                notificationHelper.buildForegroundNotification(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        );
-
         // Defensive: if onServiceConnected() ever fires more than once
         // within the same process lifetime (a transient unbind/rebind not
         // involving full process death), remove any previous subscription
@@ -165,6 +163,7 @@ public class VaultAccessibilityService extends AccessibilityService {
         activeModePackageNamesLiveData.observeForever(activeModePackageNamesObserver);
     }
 
+    // new
     private void onVaultedAppsChanged(List<VaultedApp> vaultedApps) {
         Set<String> active = new HashSet<>();
         if (vaultedApps != null) {
@@ -175,12 +174,34 @@ public class VaultAccessibilityService extends AccessibilityService {
             }
         }
         activeVaultedPackageNames = active;
+        updateForegroundState();
     }
 
     private void onActiveModePackageNamesChanged(List<String> packageNames) {
         activeFocusModePackageNames = packageNames != null
                 ? new HashSet<>(packageNames)
                 : new HashSet<>();
+        updateForegroundState();
+    }
+
+    private void updateForegroundState() {
+        boolean hasAnythingToProtect = !activeVaultedPackageNames.isEmpty()
+                || !activeFocusModePackageNames.isEmpty();
+        boolean shouldBeForeground = hasAnythingToProtect
+                && getReliabilityNotificationEnabledUseCase.execute();
+
+        if (shouldBeForeground && !isCurrentlyForeground) {
+            ServiceCompat.startForeground(
+                    this,
+                    VaultNotificationHelper.FOREGROUND_NOTIFICATION_ID,
+                    notificationHelper.buildForegroundNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            );
+            isCurrentlyForeground = true;
+        } else if (!shouldBeForeground && isCurrentlyForeground) {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
+            isCurrentlyForeground = false;
+        }
     }
 
     @Override
@@ -223,10 +244,21 @@ public class VaultAccessibilityService extends AccessibilityService {
         // OR in the currently active Focus Mode's list — either is
         // sufficient, matching the explicit "additive only" security
         // decision documented in the class doc above.
-        if (activeVaultedPackageNames.contains(packageName)
-                || activeFocusModePackageNames.contains(packageName)) {
+        // new
+        if (isPackageEnforced(packageName)) {
             enforceVault();
         }
+    }
+
+    private boolean isPackageEnforced(String packageName) {
+        if (activeFocusModePackageNames.contains(packageName)) {
+            return true;
+        }
+        boolean modeActiveWithApps = !activeFocusModePackageNames.isEmpty();
+        if (modeActiveWithApps && !getFocusModeUnionEnabledUseCase.execute()) {
+            return false;
+        }
+        return activeVaultedPackageNames.contains(packageName);
     }
 
     private void enforceVault() {
@@ -275,7 +307,10 @@ public class VaultAccessibilityService extends AccessibilityService {
         // MIUI kill path this whole feature targets — that's a hard
         // process kill, not a graceful onDestroy() — so this is here for
         // correctness on normal service teardown, not as the reliability fix.
-        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
+        if (isCurrentlyForeground) {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
+            isCurrentlyForeground = false;
+        }
         super.onDestroy();
     }
 }
